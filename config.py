@@ -1,17 +1,34 @@
 import os, subprocess
-from libqtile import bar, layout, qtile, widget, hook
+from typing import override
+from libqtile import bar, layout, qtile, hook
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
+from qtile_extras.bar import Bar
+from qtile_extras.widget import modify
+from qtile_extras import widget
+from qtile_extras.widget.decorations import PowerLineDecoration
 
-@hook.subscribe.startup_once
+@hook.subscribe.startup
 def autostart():
     home = os.path.expanduser('~/.config/qtile/autostart.sh')
     subprocess.call(home)
 
+colours = [
+    "#cad3f5", # normal text
+    "#c6a0f6", # selected text and border
+    "#24273a", # normal background (Base)
+    "#363a4f", # selected bg
+    "#d5aeea",  # pink
+    "#F28FAD",  # red
+    "#96CDFB", # blue
+    "#18192600", # crust (transparent)
+    "#5b6078", # crust
+]
 
 mod = "mod4"
-terminal = guess_terminal()
+# terminal = guess_terminal()
+terminal = "alacritty"
 runLauncher = "dmenu_run"
 
 keys = [
@@ -37,7 +54,7 @@ keys = [
     Key([mod, "shift"], "Right", lazy.layout.shuffle_right(), desc="Move window to the right"),
     Key([mod, "shift"], "Down", lazy.layout.shuffle_down(), desc="Move window down"),
     Key([mod, "shift"], "Up", lazy.layout.shuffle_up(), desc="Move window up"),
-    # Grow windows. If current window is on the edge of screen and direction
+    # Grow windows. If current window is in the edge of screen and direction
     # will be to screen edge - window would shrink.
     Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
     Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
@@ -51,7 +68,7 @@ keys = [
     # Switch between screens
     Key([mod, "mod1"], "Right", lazy.next_screen(), desc="Move to the next screen"),
     Key([mod, "mod1"], "Left", lazy.prev_screen(), desc="Move to the previous screen"),
-    Key([mod, "shift"], "Space", lazy.next_screen(), desc="Move to the next screen"),
+    Key([mod], "Space", lazy.next_screen(), desc="Move to the next screen"),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -121,8 +138,12 @@ for i in groups:
     )
 
 layouts = [
-    layout.MonadTall(),
-    layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4),
+    layout.MonadTall(border_focus=colours[1],
+                     margin=3,
+                     border_width=1,
+                     single_border_width=0,
+                     single_margin=0),
+    #layout.Columns(border_focus_stack=["#d75f5f", "#8f3d3d"], border_width=4),
     layout.Max(),
     # Try more layouts by unleashing below layouts.
     # layout.Stack(num_stacks=2),
@@ -133,23 +154,75 @@ layouts = [
     # layout.Tile(),
     # layout.TreeTab(),
     # layout.VerticalTile(),
-    # layout.Zoomy(),
+    layout.Zoomy(),
 ]
 
 widget_defaults = dict(
-    font="sans",
+    #font="sans",
+    font="Jetbrains Mono",
     fontsize=12,
     padding=3,
+    margin=4,
+    background=colours[2]
+    #background='#0000000'
 )
 extension_defaults = widget_defaults.copy()
 
 def initWidg(tray):
+    powerline = {
+        "decorations": [
+            PowerLineDecoration(path="forward_slash",size=8,)
+        ]
+    }
+    plLeft = {
+        "decorations": [
+            PowerLineDecoration(path="rounded_right",size=8,)
+        ]
+    }
+    plRight = {
+        "decorations": [
+            PowerLineDecoration(path="rounded_left",size=8,override_next_colour=colours[7])
+        ]
+    }
+    c2=colours[8]
+    #c2='#00000000'
     widgetsLeft = [
-        widget.GroupBox(),
-        widget.CurrentLayout(),
+
+        # widget.GroupBox(
+        #     font="Jetbrains Mono Bold",
+        #     padding_x=5,
+        #     margin_x=3,
+        #     highlight_method="border",
+        #     active=colours[1],
+        #     borderwidth=3,
+
+        #     background=colours[2],
+        #     inactive=colours[0],
+        #     rounded=False,
+        #     highlight_color=[colours[3]],
+        #     block_highlight_text_color=colours[6],
+        #     this_screen_border=colours[6],
+        #     this_current_screen_border=colours[1]
+
+        # ),
+        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.GroupBox2(
+
+             font="Jetbrains Mono Bold",
+             padding_x=5,
+             margin_x=3,
+            **powerline,
+        ),
+        widget.Spacer(length=1,background=colours[7],**powerline),
+        widget.CurrentLayoutIcon(scale=0.75),
+        # widget.GroupBox2(),
+        widget.CurrentScreen(**plRight),
+        widget.Spacer(length=10,background=colours[7],),
+        widget.Spacer(length=1,background=colours[7],**plLeft),
         widget.Prompt(),
-        widget.TextBox("|"),
-        widget.WindowName(),
+        #widget.TextBox("|"),
+        widget.WindowName(**plRight),
+        widget.Spacer(length=10,background=colours[7],),
         widget.Chord(
             chords_colors={
                 "launch": ("#ff0000", "#ffffff"),
@@ -158,11 +231,29 @@ def initWidg(tray):
         ),
     ]
     widgetsRight = [
-        widget.Clock(format="%d/%m/%y | %a - %H:%M"),
-        widget.QuickExit(),
+        widget.Spacer(length=1,background=colours[7],**plLeft),
+        #widget.TaskList(),
+        #widget.WidgetBox(widgets=[
+        widget.CPU(background=c2,
+                   **powerline
+                   ),
+        widget.Memory(measure_mem='G',format='MEM: {MemUsed: .01f}G {MemPercent: .0f}%',**powerline),
+        widget.CheckUpdates(display_format='U: {Updates}',no_update_string='U: 0',background=c2, **plRight),
+        #widget.DF(visible_on_warn=False, **plRight),
+        #widget.Spacer(length=1,**plRight),
+        #widget.Net(background=colours[2], **powerline),
+        #widget.Spacer(length=1,background=colours[7],**powerline),
+        #widget.OpenWeather(location="Edinburgh",background=colours[2], **powerline),
+        #widget.Spacer(length=1,background=colours[7],**powerline),
+        #]),
+        widget.Spacer(length=1,background=colours[7]),
+        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.Volume(emoji=False,**powerline),
+        widget.Clock(format="%d/%m/%y | %a - %H:%M",background=c2, **powerline),
+        widget.QuickExit(default_text='[X]', countdown_format='[{}]',**plRight),
     ]
     if tray:
-        widgetsRight.insert(0, widget.Systray())
+        widgetsRight.insert(0, widget.Systray(**powerline,background=colours[7]))
 
     return widgetsLeft + widgetsRight
 
@@ -171,17 +262,21 @@ screens = [
     Screen(
         top=bar.Bar(
             widgets = initWidg(0),
-            size = 24,
-            # border_width=[2, 0, 2, 0],  # Draw top and bottom borders
-            # border_color=["ff00ff", "000000", "ff00ff", "000000"]  # Borders are magenta
+            size = 31,
+            border_width=[8, 8, 8, 8],  # Draw top and bottom borders
+            #border_color=["ff00ff", "000000", "ff00ff", "000000"],  # Borders are magenta
+            border_color=[colours[7],colours[7],colours[7],colours[7]],  # Borders are magenta
+            background="#00000000",
         ),
     ),
     Screen(
         top=bar.Bar(
             widgets = initWidg(1),
-            size = 24,
-            # border_width=[2, 0, 2, 0],  # Draw top and bottom borders
-            # border_color=["ff00ff", "000000", "ff00ff", "000000"]  # Borders are magenta
+            size = 31,
+            border_width=[4, 4, 4, 4],  # Draw top and bottom borders
+            #border_color=['#00000000','#00000000','#00000000','#00000000',],  # Borders are magenta
+            border_color=[colours[7],colours[7],colours[7],colours[7]],  # Borders are magenta
+            background="#00000000",
         ),
     ),
 ]
