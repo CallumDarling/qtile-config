@@ -159,16 +159,18 @@ layouts = [
 
 widget_defaults = dict(
     #font="sans",
-    font="Jetbrains Mono",
+    font="Jetbrains Mono Bold",
     fontsize=12,
-    padding=3,
-    margin=4,
+    padding=0,
+    margin=0,
     background=colours[2]
     #background='#0000000'
 )
 extension_defaults = widget_defaults.copy()
 
 def initWidg(tray):
+    c1=colours[2]
+    c2=colours[8]
     powerline = {
         "decorations": [
             PowerLineDecoration(path="forward_slash",size=8,)
@@ -176,15 +178,14 @@ def initWidg(tray):
     }
     plLeft = {
         "decorations": [
-            PowerLineDecoration(path="rounded_right",size=8,)
+            PowerLineDecoration(path="arrow_right",size=8,)
         ]
     }
     plRight = {
         "decorations": [
-            PowerLineDecoration(path="rounded_left",size=8,override_next_colour=colours[7])
+            PowerLineDecoration(path="arrow_left",size=8,override_next_colour=c1)
         ]
     }
-    c2=colours[8]
     #c2='#00000000'
     widgetsLeft = [
 
@@ -205,7 +206,7 @@ def initWidg(tray):
         #     this_current_screen_border=colours[1]
 
         # ),
-        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.Spacer(length=1,background=c1,**plLeft),
         widget.GroupBox2(
 
              font="Jetbrains Mono Bold",
@@ -213,16 +214,16 @@ def initWidg(tray):
              margin_x=3,
             **powerline,
         ),
-        widget.Spacer(length=1,background=colours[7],**powerline),
-        widget.CurrentLayoutIcon(scale=0.75),
+        widget.Spacer(length=1,background=c1,**powerline),
+        widget.CurrentLayoutIcon(scale=0.5),
         # widget.GroupBox2(),
         widget.CurrentScreen(**plRight),
-        widget.Spacer(length=10,background=colours[7],),
-        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.Spacer(length=10,background=c1,),
+        widget.Spacer(length=1,background=c1,**plLeft),
         widget.Prompt(),
         #widget.TextBox("|"),
         widget.WindowName(**plRight),
-        widget.Spacer(length=10,background=colours[7],),
+        widget.Spacer(length=10,background=c1,),
         widget.Chord(
             chords_colors={
                 "launch": ("#ff0000", "#ffffff"),
@@ -231,7 +232,7 @@ def initWidg(tray):
         ),
     ]
     widgetsRight = [
-        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.Spacer(length=1,background=c1,**plLeft),
         #widget.TaskList(),
         #widget.WidgetBox(widgets=[
         widget.CPU(background=c2,
@@ -246,37 +247,37 @@ def initWidg(tray):
         #widget.OpenWeather(location="Edinburgh",background=colours[2], **powerline),
         #widget.Spacer(length=1,background=colours[7],**powerline),
         #]),
-        widget.Spacer(length=1,background=colours[7]),
-        widget.Spacer(length=1,background=colours[7],**plLeft),
+        widget.Spacer(length=1,background=c1),
+        widget.Spacer(length=1,background=c1,**plLeft),
         widget.Volume(emoji=False,**powerline),
         widget.Clock(format="%d/%m/%y | %a - %H:%M",background=c2, **powerline),
         widget.QuickExit(default_text='[X]', countdown_format='[{}]',**plRight),
     ]
     if tray:
-        widgetsRight.insert(0, widget.Systray(**powerline,background=colours[7]))
+        widgetsRight.insert(0, widget.Systray(**powerline,background=c1))
 
     return widgetsLeft + widgetsRight
 
-
+bgcol = colours[8]
 screens = [
     Screen(
         top=bar.Bar(
             widgets = initWidg(0),
             size = 31,
-            border_width=[8, 8, 8, 8],  # Draw top and bottom borders
+            border_width=[2, 2, 2, 2],  # Draw top and bottom borders
             #border_color=["ff00ff", "000000", "ff00ff", "000000"],  # Borders are magenta
-            border_color=[colours[7],colours[7],colours[7],colours[7]],  # Borders are magenta
-            background="#00000000",
+            border_color=[bgcol,bgcol,bgcol,bgcol],  # Borders are magenta
+            background=bgcol
         ),
     ),
     Screen(
         top=bar.Bar(
             widgets = initWidg(1),
             size = 31,
-            border_width=[4, 4, 4, 4],  # Draw top and bottom borders
+            border_width=[2, 2, 2, 2],  # Draw top and bottom borders
             #border_color=['#00000000','#00000000','#00000000','#00000000',],  # Borders are magenta
-            border_color=[colours[7],colours[7],colours[7],colours[7]],  # Borders are magenta
-            background="#00000000",
+            border_color=[bgcol,bgcol,bgcol,bgcol],  # Borders are magenta
+            background=bgcol
         ),
     ),
 ]
