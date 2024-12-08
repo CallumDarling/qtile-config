@@ -8,6 +8,7 @@ from qtile_extras.bar import Bar
 from qtile_extras.widget import modify
 from qtile_extras import widget
 from qtile_extras.widget.decorations import PowerLineDecoration, RectDecoration
+from qtile_extras.widget.groupbox2 import GroupBoxRule
 
 @hook.subscribe.startup
 def autostart():
@@ -19,7 +20,7 @@ colours = [
     "#c6a0f6", # selected text and border
     "#24273a", # normal background (Base)
     "#363a4f", # selected bg
-    "#d5aeea",  # pink
+    "#ea76cb", #"#d5aeea",  # pink
     "#F28FAD",  # red
     "#96CDFB", # blue
     "#18192600", # crust (transparent)
@@ -28,8 +29,8 @@ colours = [
 ]
 
 mod = "mod4"
-# terminal = guess_terminal()
-terminal = "alacritty"
+terminal = guess_terminal()
+# terminal = "alacritty"
 runLauncher = "dmenu_run"
 
 keys = [
@@ -170,19 +171,29 @@ widget_defaults = dict(
 )
 extension_defaults = widget_defaults.copy()
 
+# GroupBoxRule(text_colour=colours[4]).when(occupied=True)
+def draw_red_square(box):
+
+    w = 10
+    h = 10
+    x = (box.size - w) // 2
+    y = (box.bar.height - h) // 2
+    box.drawer.ctx.rectangle(x, y, w, h)
+    box.drawer.set_source_rgb("ff0000")
+    box.drawer.ctx.fill()
+
+# Add this to your rules:
+# GroupBoxRule(custom_draw=draw_red_square).when(occupied=True)
+# GroupBoxRule(text_colour="00ffff").when(focused=False, occupied=True)
+
+def dummy(rule, box):
+    return True
+
+
+
+
+
 def initWidg(tray):
-    c1=colours[2]
-    c2=colours[0]
-    # powerline = {
-    #     "decorations": [
-    #         PowerLineDecoration(path="forward_slash",size=8,)
-    #     ]
-    # }
-    # plLeft = {
-    #     "decorations": [
-    #         PowerLineDecoration(path="arrow_right",size=8,)
-    #     ]
-    #}
     plRight = {
         "decorations": [
             PowerLineDecoration(path="arrow_left",size=8)
@@ -194,8 +205,10 @@ def initWidg(tray):
         ],
         "padding": 10,
     }
-    colourLeft = colours[4]
-    colourRight = colours[9]
+    # colourLeft = colours[4]
+    # colourRight = colours[9]
+    colourLeft = '#04a5e5'
+    colourRight = '#7dc4e4'
     widgetsLeft = [
        widget.Spacer(length=5, background=colourLeft),
         widget.CurrentLayoutIcon(scale=0.6,background=colourLeft,foreground=colours[2],use_mask=True),
@@ -203,16 +216,45 @@ def initWidg(tray):
         widget.GroupBox2(
             background=colourRight,
             foreground=colours[4],
-            text_colours=colours[2],
+            text_colour=colours[2],
              font="Jetbrains Mono Bold",
              padding_x=5,
              margin_x=3,
             **plRight,
+             rules=[
+                 GroupBoxRule(text_colour='#ffffff').when(occupied=True),
+                 GroupBoxRule(text_colour='#7c7f93').when(occupied=False),
+
+                 GroupBoxRule(block_colour=colours[1],line_colour=colours[1])
+                 .when(GroupBoxRule.SCREEN_THIS,focused=True),
+
+                 GroupBoxRule(block_colour=colourLeft,line_colour=colourLeft)
+                 .when(GroupBoxRule.SCREEN_OTHER,focused=True),
+
+                 GroupBoxRule(block_colour=colours[1],line_colour=colours[1])
+                 .when(GroupBoxRule.SCREEN_THIS,focused=False),
+
+                 GroupBoxRule(block_colour=colourLeft,line_colour=colourLeft)
+                 .when(GroupBoxRule.SCREEN_OTHER,focused=False),
+                 # GroupBoxRule(line_colour=colours[1],
+                 #              line_position=GroupBoxRule.LINE_TOP | GroupBoxRule.LINE_BOTTOM,
+                 #              line_width=4)
+                 # .when(GroupBoxRule.SCREEN_ANY,focused=True),
+
+
+                 # GroupBoxRule(line_colour=colourLeft,
+                 #              line_position=GroupBoxRule.LINE_TOP | GroupBoxRule.LINE_BOTTOM,
+                 #              line_width=4)
+                 # .when(GroupBoxRule.SCREEN_ANY, focused=False),
+
+
+             ],
         ),
         widget.Spacer(length=1),
         widget.Prompt(),
         #widget.TextBox("|"),
-        widget.WindowName(background=colours[8],foreground=colours[2],),
+        widget.Spacer(length=10),
+        widget.WindowName(background=colours[8],foreground=colours[0],),
         widget.Chord(
             chords_colors={
                 "launch": ("#ff0000", "#ffffff"),
@@ -230,9 +272,9 @@ def initWidg(tray):
         widget.TextBox(fmt='MEM', background=colourLeft, **rect),
         widget.Memory(measure_mem='G',format='{MemUsed: .01f}G {MemPercent: .0f}% ',**rect,background=colourRight),
         widget.Spacer(length=1),
-        widget.TextBox(fmt='CPU', background=colourLeft, **rect),
-        widget.CheckUpdates(display_format='U: {Updates}',
-                            no_update_string='U: 0 ',
+        widget.TextBox(fmt='U', background=colourLeft, **rect),
+        widget.CheckUpdates(display_format='{Updates} ',
+                            no_update_string='0 U',
                             background=colourRight,
                             **rect,
                             colour_have_updates=colours[2],
