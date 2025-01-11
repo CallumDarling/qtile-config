@@ -9,6 +9,7 @@ from qtile_extras.widget import modify
 from qtile_extras import widget
 from qtile_extras.widget.decorations import PowerLineDecoration, RectDecoration
 from qtile_extras.widget.groupbox2 import GroupBoxRule
+from libqtile.log_utils import logger
 
 @hook.subscribe.startup
 def autostart():
@@ -29,9 +30,10 @@ colours = [
 ]
 
 mod = "mod4"
-terminal = guess_terminal()
-# terminal = "alacritty"
+#terminal = guess_terminal()
+terminal = "termite"
 runLauncher = "dmenu_run"
+
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -45,7 +47,7 @@ keys = [
     Key([mod], "Right", lazy.layout.right(), desc="Move focus to right"),
     Key([mod], "Down", lazy.layout.down(), desc="Move focus down"),
     Key([mod], "Up", lazy.layout.up(), desc="Move focus up"),
-    Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
+    #Key([mod], "space", lazy.layout.next(), desc="Move window focus to other window"),
     # Move windows between left/right columns or move up/down in current stack.
     # Moving out of range in Columns layout will create new column.
     Key([mod, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"),
@@ -113,23 +115,46 @@ for vt in range(1, 8):
     )
 
 
-groups = [Group(i) for i in "123456789"]
+#groups = [Group(i) for i in "123456789"]
+groups = [
+    # Screen affinity here is used to make
+    # sure the groups startup on the right screens
+    Group(name="1", screen_affinity=0),
+    Group(name="3", screen_affinity=0),
+    Group(name="5", screen_affinity=0),
+    Group(name="7", screen_affinity=0),
+    Group(name="9", screen_affinity=0),
+    Group(name="2", screen_affinity=1),
+    Group(name="4", screen_affinity=1),
+    Group(name="6", screen_affinity=1),
+    Group(name="8", screen_affinity=1),
+    Group(name="0", screen_affinity=1),
+]
+
+def go_to_group(name: str):
+    def _inner(qtile):
+        if len(qtile.screens) == 1:
+            qtile.groups_map[name].toscreen()
+            return
+
+        if name in '13579-':
+            qtile.focus_screen(0)
+            qtile.groups_map[name].toscreen()
+        else:
+            qtile.focus_screen(1)
+            qtile.groups_map[name].toscreen()
+
+    return _inner
 
 for i in groups:
+    keys.append(Key([mod], i.name, lazy.function(go_to_group(i.name))))
+    # keys.append(Key([mod, "shift"], i.name, lazy.function(go_to_group_and_move_window(i.name))))
     keys.extend(
         [
-            # mod + group number = switch to group
-            Key(
-                [mod],
-                i.name,
-                lazy.group[i.name].toscreen(),
-                desc=f"Switch to group {i.name}",
-            ),
-            # mod + shift + group number = switch to & move focused window to group
             Key(
                 [mod, "shift"],
                 i.name,
-                lazy.window.togroup(i.name, switch_group=True),
+                lazy.window.togroup(i.name, switch_group=False),
                 desc=f"Switch to & move focused window to group {i.name}",
             ),
             # Or, use below if you prefer not to switch to that group.
@@ -138,6 +163,31 @@ for i in groups:
             #     desc="move focused window to group {}".format(i.name)),
         ]
     )
+
+
+# for i in groups:
+#     keys.extend(
+#         [
+#             # mod + group number = switch to group
+#             Key(
+#                 [mod],
+#                 i.name,
+#                 lazy.group[i.name].toscreen(),
+#                 desc=f"Switch to group {i.name}",
+#             ),
+#             # mod + shift + group number = switch to & move focused window to group
+#             Key(
+#                 [mod, "shift"],
+#                 i.name,
+#                 lazy.window.togroup(i.name, switch_group=False),
+#                 desc=f"Switch to & move focused window to group {i.name}",
+#             ),
+#             # Or, use below if you prefer not to switch to that group.
+#             # # mod + shift + group number = move focused window to group
+#             # Key([mod, "shift"], i.name, lazy.window.togroup(i.name),
+#             #     desc="move focused window to group {}".format(i.name)),
+#         ]
+#     )
 
 layouts = [
     layout.MonadTall(border_focus=colours[1],
@@ -156,7 +206,8 @@ layouts = [
     # layout.Tile(),
     # layout.TreeTab(),
     # layout.VerticalTile(),
-    layout.Zoomy(),
+    #layout.Zoomy(),
+    layout.Floating(),
 ]
 
 widget_defaults = dict(
@@ -165,7 +216,7 @@ widget_defaults = dict(
     fontsize=11,
     padding=0,
     margin=0,
-    background=colours[8],
+    #background=colours[8],
     foreground=colours[2]
     #background='#0000000'
 )
@@ -194,6 +245,9 @@ def dummy(rule, box):
 
 
 def initWidg(tray):
+    visGroups = ['1','3','5','7','9','-']
+    if tray==1:
+        visGroups = ['2','4','6','8','0','=']
     plRight = {
         "decorations": [
             PowerLineDecoration(path="arrow_left",size=8)
@@ -214,6 +268,7 @@ def initWidg(tray):
         widget.CurrentLayoutIcon(scale=0.6,background=colourLeft,foreground=colours[2],use_mask=True),
         widget.CurrentScreen(**plRight,background=colourLeft,active_color=colours[2],fmt=' {}',),
         widget.GroupBox2(
+            visible_groups=visGroups,
             background=colourRight,
             foreground=colours[4],
             text_colour=colours[2],
@@ -254,7 +309,7 @@ def initWidg(tray):
         widget.Prompt(),
         #widget.TextBox("|"),
         widget.Spacer(length=10),
-        widget.WindowName(background=colours[8],foreground=colours[0],),
+        widget.WindowName(background=colourRight,**rect),
         widget.Chord(
             chords_colors={
                 "launch": ("#ff0000", "#ffffff"),
@@ -297,7 +352,7 @@ def initWidg(tray):
 
     return widgetsLeft + widgetsRight
 
-bgcol = colours[8]
+bgcol = '#00000000'
 screens = [
     Screen(
         top=bar.Bar(
