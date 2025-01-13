@@ -1,4 +1,5 @@
 #! /bin/sh
+killall udiskie &
 #lxsession &
 lxpolkit &
 xlayoutdisplay &

@@ -34,6 +34,29 @@ mod = "mod4"
 terminal = "termite"
 runLauncher = "dmenu_run"
 
+def swapMonitors(qtile):
+
+    if len(qtile.screens)<2:
+        return
+    #logger.warning("------------")
+    g0 = qtile.screens[0].group
+    g1 = qtile.screens[1].group
+    w0 = g0.windows
+    lenW0 = len(w0)
+
+    while len(g1.windows)>0:
+        window = g1.windows[0]
+        #logger.warning("Moving window to monitor 0: "+window.name)
+        window.toscreen(0)
+
+    logger.warning(" ")
+    for i in range(0,lenW0):
+        window = g0.windows[0]
+        #logger.warning("Moving window to monitor 1: "+window.name)
+        window.toscreen(1)
+    return
+
+
 
 keys = [
     # A list of available commands that can be bound to keys can be found
@@ -73,6 +96,7 @@ keys = [
     Key([mod, "mod1"], "Right", lazy.next_screen(), desc="Move to the next screen"),
     Key([mod, "mod1"], "Left", lazy.prev_screen(), desc="Move to the previous screen"),
     Key([mod], "Space", lazy.next_screen(), desc="Move to the next screen"),
+    Key([mod, "shift"], "Space", lazy.function(swapMonitors), desc="Move to the next screen"),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -328,8 +352,8 @@ def initWidg(tray):
         widget.Memory(measure_mem='G',format='{MemUsed: .01f}G {MemPercent: .0f}% ',**rect,background=colourRight),
         widget.Spacer(length=1),
         widget.TextBox(fmt='U', background=colourLeft, **rect),
-        widget.CheckUpdates(display_format='{Updates} ',
-                            no_update_string='0 U',
+        widget.CheckUpdates(display_format='{Updates}',
+                            no_update_string='-',
                             background=colourRight,
                             **rect,
                             colour_have_updates=colours[2],
