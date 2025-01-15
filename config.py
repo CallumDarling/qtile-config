@@ -1,7 +1,7 @@
 import os, subprocess
 from typing import override
 from libqtile import bar, layout, qtile, hook
-from libqtile.config import Click, Drag, Group, Key, Match, Screen
+from libqtile.config import Click, Drag, Group, Key, Match, Screen, ScratchPad, DropDown
 from libqtile.lazy import lazy
 from libqtile.utils import guess_terminal
 from qtile_extras.bar import Bar
@@ -10,7 +10,10 @@ from qtile_extras import widget
 from qtile_extras.widget.decorations import PowerLineDecoration, RectDecoration
 from qtile_extras.widget.groupbox2 import GroupBoxRule
 from libqtile.log_utils import logger
+from datetime import date
+from pathlib import Path
 
+logger.warning("---  Reloading Config  ---")
 @hook.subscribe.startup
 def autostart():
     home = os.path.expanduser('~/.config/qtile/autostart.sh')
@@ -83,20 +86,27 @@ keys = [
     Key([mod, "shift"], "Up", lazy.layout.shuffle_up(), desc="Move window up"),
     # Grow windows. If current window is in the edge of screen and direction
     # will be to screen edge - window would shrink.
-    Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
-    Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
-    Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
-    Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
-    Key([mod, "control"], "Left", lazy.layout.grow_left(), desc="Grow window to the left"),
-    Key([mod, "control"], "Right", lazy.layout.grow_right(), desc="Grow window to the right"),
-    Key([mod, "control"], "Down", lazy.layout.grow_down(), desc="Grow window down"),
-    Key([mod, "control"], "Up", lazy.layout.grow_up(), desc="Grow window up"),
+    # Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    # Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
+    # Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    # Key([mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"),
+    # Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
+    # Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
+    # Key([mod, "control"], "Left", lazy.layout.grow_left(), desc="Grow window to the left"),
+    # Key([mod, "control"], "Right", lazy.layout.grow_right(), desc="Grow window to the right"),
+    # Key([mod, "control"], "Down", lazy.layout.grow_down(), desc="Grow window down"),
+    # Key([mod, "control"], "Up", lazy.layout.grow_up(), desc="Grow window up"),
+
+
+    Key([mod, "control"], "Down", lazy.layout.shrink(), desc="Grow window to the left"),
+    Key([mod, "control"], "Up", lazy.layout.grow(), desc="Grow window to the right"),
     Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
+
     # Switch between screens
     Key([mod, "mod1"], "Right", lazy.next_screen(), desc="Move to the next screen"),
     Key([mod, "mod1"], "Left", lazy.prev_screen(), desc="Move to the previous screen"),
     Key([mod], "Space", lazy.next_screen(), desc="Move to the next screen"),
-    Key([mod, "shift"], "Space", lazy.function(swapMonitors), desc="Move to the next screen"),
+    Key([mod, "shift"], "Space", lazy.function(swapMonitors), desc="Swap all windows from the active groups on screen 0 & 1"),
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
     # Unsplit = 1 window displayed, like Max layout, but still with
@@ -113,12 +123,7 @@ keys = [
     # Toggle between different layouts as defined below
     Key([mod], "Tab", lazy.next_layout(), desc="Toggle between layouts"),
     Key([mod, "shift"], "q", lazy.window.kill(), desc="Kill focused window"),
-    Key(
-        [mod],
-        "f",
-        lazy.window.toggle_fullscreen(),
-        desc="Toggle fullscreen on the focused window",
-    ),
+    Key([mod], "f", lazy.window.toggle_fullscreen(), desc="Toggle fullscreen on the focused window"),
     Key([mod], "t", lazy.window.toggle_floating(), desc="Toggle floating on the focused window"),
     Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     Key([mod, "control", "shift"], "c", lazy.shutdown(), desc="Shutdown Qtile"),
@@ -172,7 +177,6 @@ def go_to_group(name: str):
 
 for i in groups:
     keys.append(Key([mod], i.name, lazy.function(go_to_group(i.name))))
-    # keys.append(Key([mod, "shift"], i.name, lazy.function(go_to_group_and_move_window(i.name))))
     keys.extend(
         [
             Key(
@@ -181,37 +185,37 @@ for i in groups:
                 lazy.window.togroup(i.name, switch_group=False),
                 desc=f"Switch to & move focused window to group {i.name}",
             ),
-            # Or, use below if you prefer not to switch to that group.
-            # # mod + shift + group number = move focused window to group
-            # Key([mod, "shift"], i.name, lazy.window.togroup(i.name),
-            #     desc="move focused window to group {}".format(i.name)),
         ]
     )
 
+todayPath = "Documents/org/Notes/"+date.today().strftime("%Y/%B/")
+tdp = Path(todayPath)
+if Path.exists(tdp):
+    logger.warning(todayPath+" exists, no action needed")
+else:
+    logger.warning("Path does not exist, creating path")
+    tdp.mkdir(parents=True)
 
-# for i in groups:
-#     keys.extend(
-#         [
-#             # mod + group number = switch to group
-#             Key(
-#                 [mod],
-#                 i.name,
-#                 lazy.group[i.name].toscreen(),
-#                 desc=f"Switch to group {i.name}",
-#             ),
-#             # mod + shift + group number = switch to & move focused window to group
-#             Key(
-#                 [mod, "shift"],
-#                 i.name,
-#                 lazy.window.togroup(i.name, switch_group=False),
-#                 desc=f"Switch to & move focused window to group {i.name}",
-#             ),
-#             # Or, use below if you prefer not to switch to that group.
-#             # # mod + shift + group number = move focused window to group
-#             # Key([mod, "shift"], i.name, lazy.window.togroup(i.name),
-#             #     desc="move focused window to group {}".format(i.name)),
-#         ]
-#     )
+
+groups.append(ScratchPad("scratchpad", [
+    DropDown("qtile shell", terminal+" -e 'qtile shell'", x=0.05, y=0.09, width=0.9, height=0.4, opacity=0.9, on_focus_lost_hide=False),
+    DropDown("qtile log", terminal+" -e 'less +F /home/cd/.local/share/qtile/qtile.log'", x=0.05, y=0.51, width=0.9, height=0.4, opacity=0.9, on_focus_lost_hide=False),
+    DropDown("Spotify", "spotify", x=0.1, y=0.1, width=0.8, height=0.8, opacity=0.9, on_focus_lost_hide=False),
+    DropDown("qalc", terminal+" -e 'qalc -s \'autocalc on\''", x=0.2, y=0.25, width=0.6, height=0.5, opacity=0.9, on_focus_lost_hide=True),
+    DropDown("emacs scratch", "emacs "+todayPath+date.today().strftime("%d.org"), x=0.2, y=0.25, width=0.6, height=0.5, opacity=0.9, on_focus_lost_hide=True),
+
+]))
+
+keys.extend(
+    [
+        Key([mod], 'F11', lazy.group['scratchpad'].dropdown_toggle('qtile shell')),
+        Key([mod], 'F12', lazy.group['scratchpad'].dropdown_toggle('qtile log')),
+        Key([mod], 's', lazy.group['scratchpad'].dropdown_toggle('Spotify')),
+        Key([mod], 'q', lazy.group['scratchpad'].dropdown_toggle('qalc')),
+        Key([mod, "shift"], 'e', lazy.group['scratchpad'].dropdown_toggle('emacs scratch')),
+    ]
+)
+
 
 layouts = [
     layout.MonadTall(border_focus=colours[1],
