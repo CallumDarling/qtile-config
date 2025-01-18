@@ -356,7 +356,7 @@ def initWidg(tray):
         widget.Memory(measure_mem='G',format='{MemUsed: .01f}G {MemPercent: .0f}% ',**rect,background=colourRight),
         widget.Spacer(length=1),
         widget.TextBox(fmt='U', background=colourLeft, **rect),
-        widget.CheckUpdates(display_format='{Updates}',
+        widget.CheckUpdates(display_format='{updates}',
                             no_update_string='-',
                             background=colourRight,
                             **rect,
